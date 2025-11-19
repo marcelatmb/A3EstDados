@@ -103,11 +103,11 @@ class Complexo:
 
         # caso especial: expoente inteiro (parte imaginária 0)
         if n.b == 0 and float(n.a).is_integer():
-            n = int(n.a)
+            n_int = int(n.a)
             r = self.modulo()
             teta = self.argumento()
-            rn = pow(r, n)
-            ang = n * teta
+            rn = pow(r, n_int)
+            ang = n_int * teta
             return Complexo(
                 round(rn * math.cos(ang), 10),
                 round(rn * math.sin(ang), 10)
@@ -115,81 +115,4 @@ class Complexo:
 
         # caso geral: z^n = exp(n * ln(z))
         r = self.modulo()
-        t = self.argumento()
-        lnz = Complexo(math.log(r), t)
-        return (n * lnz).exp()
-
-    # --------------------------------------------------------
-    # EXPONENCIAL COMPLEXA: e^(a+bi)
-    # --------------------------------------------------------
-    def exp(self):
-        ea = math.exp(self.a)
-        return Complexo(
-            ea * math.cos(self.b),
-            ea * math.sin(self.b)
-        )
-
-    # --------------------------------------------------------
-    # RAÍZES n-ÉSIMAS DE z
-    # Retorna uma lista com n raízes.
-    # --------------------------------------------------------
-    def raiz(self, n=2):
-        if n == 0:
-            raise ZeroDivisionError("índice da raiz não pode ser zero")
-
-        resultados = []
-        r = self.modulo()
-        teta = self.argumento()
-        rn = pow(r, 1/n)
-
-        for k in range(n):
-            ang = (teta + 2 * math.pi * k) / n
-            resultados.append(Complexo(
-                round(rn * math.cos(ang), 10),
-                round(rn * math.sin(ang), 10)
-            ))
-
-        return resultados
-
-    # --------------------------------------------------------
-    # MÓDULO: |z|
-    # --------------------------------------------------------
-    def modulo(self):
-        return math.sqrt(self.a**2 + self.b**2)
-    
-    # --------------------------------------------------------
-    # ARGUMENTO: arg(z)
-    # --------------------------------------------------------
-    def argumento(self):
-        return math.atan2(self.b, self.a)
-
-    # --------------------------------------------------------
-    # CONJUGADO: a - bi
-    # --------------------------------------------------------
-    def conjug(self):
-        return Complexo(self.a, -self.b)
-    
-    # --------------------------------------------------------
-    # Converte valores numéricos comuns para Complexo
-    # --------------------------------------------------------
-    def _cast(self, x):
-        if isinstance(x, Complexo):
-            return x
-        return Complexo(float(x), 0)
-
-    # --------------------------------------------------------
-    # IGUALDADE aproximada (tolerância numérica)
-    # --------------------------------------------------------
-    def __eq__(self, other):
-        other = self._cast(other)
-        return abs(self.a - other.a) < 1e-9 and abs(self.b - other.b) < 1e-9
-    
-    # --------------------------------------------------------
-    # Representação amigável: "a + bi"
-    # --------------------------------------------------------
-    def __str__(self):
-        if self.b == 0:
-            return f"{self.a}"
-        if self.b > 0:
-            return f"{self.a} + {self.b}i"
-        return f"{self.a} - {abs(self.b)}i"
+        i

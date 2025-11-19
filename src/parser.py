@@ -41,13 +41,13 @@ class UnaryOpNode(Node):
 class Parser:
 
     def __init__(self):
-        # precedência dos operadores
+        # precedência dos operadores (maior valor = maior precedência)
         self.precedence = {
             "+": 1,
             "-": 1,
             "*": 2,
             "/": 2,
-            "**": 3
+            "**": 4  # mais alto; trataremos associatividade à direita
         }
 
     # --------------------------------------------------------
@@ -55,19 +55,25 @@ class Parser:
     # --------------------------------------------------------
     def tokenize(self, expr):
 
-        token_pattern = r"""
-            ([+-]?\d+(\.\d+)?[+-]\d+(\.\d+)?i |[+-]?\d+(\.\d+)?i | [+-]?\d+(\.\d+)? | [+-]?i) | # números complexos ou reais
-            (\*\*) |    # **
-            [()+\-*/] | # operadores simples
-            (conj|raiz) # funções
-        """
-
         expr = expr.replace(" ", "")
 
-        raw = re.findall(token_pattern, expr, flags=re.VERBOSE)
+        token_pattern = r"""
+            (\*\*) |
+            ([+-]?\d+(\.\d+)?[+-]\d+(\.\d+)?i) |   # a+bi ou a-bi (com coeficientes)
+            ([+-]?\d+(\.\d+)?i) |                 # bi (ex.: 3i, -2.5i)
+            ([+-]?i) |                            # i, -i, +i
+            ([+-]?\d+(\.\d+)?) |                  # número real com sinal opcional
+            (conj|raiz) |                         # funções
+            ([()+\-*/])                           # parênteses e operadores simples
+        """
 
-        # cada match tem 3 grupos — escolhemos o grupo não vazio
-        tokens = [a or b or c for a, b, c in raw]
+        raw_iter = re.finditer(token_pattern, expr, flags=re.VERBOSE)
+        tokens = [m.group(0) for m in raw_iter]
+
+        # valida: concatenando os tokens deve dar a string original
+        if "".join(tokens) != expr:
+            # achou algo que não foi tokenizado
+            raise ValueError(f"Tokenização falhou em: {expr}. Tokens parciais: {tokens}")
 
         return tokens
 
@@ -102,7 +108,7 @@ class Parser:
             # -----------------------------------
             # NÚMEROS (reais ou complexos)
             # -----------------------------------
-            if re.match(r".*i$|^\d+(\.\d+)?$", t):
+            if re.match(r'^[+-]?\d+(\.\d+)?i$|^[+-]?i$|^[+-]?\d+(\.\d+)?$', t):
                 real, imag = self.parse_complex_literal(t)
                 numero = Complexo(real, imag)
                 output.append(NumberNode(numero))
@@ -125,6 +131,8 @@ class Parser:
             elif t == ")":
                 while ops and ops[-1] != "(":
                     aplicar()
+                if not ops:
+                    raise ValueError("Parênteses desbalanceados")
                 ops.pop()  # remove "("
 
                 # função antes de "("
@@ -132,26 +140,25 @@ class Parser:
                     aplicar()
 
             # -----------------------------------
-            # OPERADORES
+            # OPERADORES (inclui **)
             # -----------------------------------
             elif t in self.precedence:
-                while (ops and ops[-1] in self.precedence
-                       and self.precedence[ops[-1]] >= self.precedence[t]):
+                # respetar associatividade: ** é right-associative
+                while (ops and ops[-1] in self.precedence and
+                       ((self.precedence[ops[-1]] > self.precedence[t]) or
+                        (self.precedence[ops[-1]] == self.precedence[t] and t != "**"))):
                     aplicar()
                 ops.append(t)
 
-            # -----------------------------------
-            # POTÊNCIA **
-            # -----------------------------------
-            elif t == "**":
-                while ops and ops[-1] == "**":
-                    aplicar()
-                ops.append(t)
+            else:
+                raise ValueError(f"Token inesperado: {t}")
 
             i += 1
 
         # aplica o restante
         while ops:
+            if ops[-1] == "(":
+                raise ValueError("Parênteses desbalanceados ao final")
             aplicar()
 
         return output[-1]
@@ -165,25 +172,23 @@ class Parser:
         # caso: real puro
         if "i" not in s:
             return float(s), 0.0
+        
+        # casos especiais: i, +i, -i
+        if s in ("i", "+i"):
+            return 0.0, 1.0
+        if s == "-i":
+            return 0.0, -1.0
 
-        # caso: só imaginário
-        if s.endswith("i"):
-            base = s[:-1]
-
-            if base == "" or base == "+":
-                return 0.0, 1.0
-            if base == "-":
-                return 0.0, -1.0
-
-            # exemplo: 3i, 2.5i
-            if "+" not in base and "-" not in base[1:]:
-                return 0.0, float(base)
-
-        # caso: a+bi ou a-bi
+        # caso: a+bi ou a-bi (ex.: 3+4i, -2.5-0.1i)
         m = re.match(r"^([+-]?\d+(\.\d+)?)([+-]\d+(\.\d+)?)i$", s)
         if m:
             real = float(m.group(1))
             imag = float(m.group(3))
             return real, imag
+
+        # caso: só imaginário como 3i ou -2.5i
+        m2 = re.match(r"^([+-]?\d+(\.\d+)?)i$", s)
+        if m2:
+            return 0.0, float(m2.group(1))
 
         raise ValueError(f"Literal complexo inválido: {s}")
