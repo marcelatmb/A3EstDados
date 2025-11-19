@@ -115,4 +115,4 @@ class Complexo:
 
         # caso geral: z^n = exp(n * ln(z))
         r = self.modulo()
-        i
+        
