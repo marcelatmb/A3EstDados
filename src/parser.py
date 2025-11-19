@@ -6,7 +6,7 @@ from complexos import Complexo
 #                DEFINIÇÃO DOS TIPOS DE NÓ DA AST
 # ============================================================
 
-class Node: 
+class Node:
     pass
 
 
@@ -56,10 +56,10 @@ class Parser:
     def tokenize(self, expr):
 
         token_pattern = r"""
-            (\d+\+\d+i|\d+-\d+i|\d+i|\d+|i) |   # números complexos ou reais
-            (\*\*) |                            # **
-            [()+\-*/] |                         # operadores simples
-            (conj|raiz)                         # funções
+            ([+-]?\d+(\.\d+)?[+-]\d+(\.\d+)?i |[+-]?\d+(\.\d+)?i | [+-]?\d+(\.\d+)? | [+-]?i) | # números complexos ou reais
+            (\*\*) |    # **
+            [()+\-*/] | # operadores simples
+            (conj|raiz) # funções
         """
 
         expr = expr.replace(" ", "")
@@ -94,7 +94,6 @@ class Parser:
             left = output.pop()
             output.append(BinaryOpNode(op, left, right))
 
-
         i = 0
         while i < len(tokens):
 
@@ -103,8 +102,9 @@ class Parser:
             # -----------------------------------
             # NÚMEROS (reais ou complexos)
             # -----------------------------------
-            if re.match(r".*i$|^\d+$", t):
-                numero = Complexo.from_string(t)
+            if re.match(r".*i$|^\d+(\.\d+)?$", t):
+                real, imag = self.parse_complex_literal(t)
+                numero = Complexo(real, imag)
                 output.append(NumberNode(numero))
 
             # -----------------------------------
@@ -127,7 +127,7 @@ class Parser:
                     aplicar()
                 ops.pop()  # remove "("
 
-                # função imediatamente antes de "("
+                # função antes de "("
                 if ops and ops[-1] in ("conj", "raiz"):
                     aplicar()
 
@@ -155,3 +155,35 @@ class Parser:
             aplicar()
 
         return output[-1]
+
+    # --------------------------------------------------------
+    # Extração de números complexos → (real, imag)
+    # --------------------------------------------------------
+    def parse_complex_literal(self, s: str):
+        s = s.strip().replace(" ", "")
+
+        # caso: real puro
+        if "i" not in s:
+            return float(s), 0.0
+
+        # caso: só imaginário
+        if s.endswith("i"):
+            base = s[:-1]
+
+            if base == "" or base == "+":
+                return 0.0, 1.0
+            if base == "-":
+                return 0.0, -1.0
+
+            # exemplo: 3i, 2.5i
+            if "+" not in base and "-" not in base[1:]:
+                return 0.0, float(base)
+
+        # caso: a+bi ou a-bi
+        m = re.match(r"^([+-]?\d+(\.\d+)?)([+-]\d+(\.\d+)?)i$", s)
+        if m:
+            real = float(m.group(1))
+            imag = float(m.group(3))
+            return real, imag
+
+        raise ValueError(f"Literal complexo inválido: {s}")
