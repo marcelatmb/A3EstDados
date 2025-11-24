@@ -12,15 +12,6 @@ class Complexo:
             self.a = float(a)
             self.b = float(b)
 
-    # propriedades compatíveis com os testes
-    @property
-    def real(self):
-        return self.a
-
-    @property
-    def imag(self):
-        return self.b
-
     # representação
     def __repr__(self):
         return f"Complexo({self.a}, {self.b})"
@@ -131,14 +122,14 @@ class Complexo:
         return Complexo(expx * math.cos(y), expx * math.sin(y))
 
     # raiz (n-ésima raiz principal) - raiz sem argumento assume n=2
-    def raiz_n(self, n=2):
+    '''def raiz_n(self, n=2):
         if n == 0:
             raise ErroMatematico("raiz de ordem zero")
         r = self.modulo()
         theta = self.argumento()
-        root_r = r ** (1.0 / n)
-        root_theta = theta / n
-        return Complexo(root_r * math.cos(root_theta), root_r * math.sin(root_theta))
+        raiz_r = r ** (1.0 / n)
+        raiz_theta = theta / n
+        return Complexo(raiz_r * math.cos(raiz_theta), raiz_r * math.sin(raiz_theta))'''
 
     # igualdade
     def __eq__(self, other):

@@ -33,25 +33,16 @@ class Parser:
             "/": 2,
             "**": 4
         }
+        # Apenas 'conj' é um operador unário de palavra-chave explícito
+        self.precedence.update({"conj": 5})
 
     def tokenize(self, expr):
         expr = expr.replace(" ", "")
 
-        token_pattern = r'''
-            (\()                 |   # abre parênteses
-            (\))                 |   # fecha parênteses
-            (\*\*)               |   # potência
-            (\+)                 |   # +
-            (\-)                 |   # -
-            (\*)                 |   # *
-            (\/)                 |   # /
-            ([+-]?\d+(?:\.\d+)?[+-]\d+(?:\.\d+)?i)  |  # a+bi ou a-bi (com coeficientes)
-            ([+-]?\d+(?:\.\d+)?i)  |   # bi (ex.: 3i, -2.5i)
-            ([+-]?i)              |   # i, -i, +i
-            ([+-]?\d+(?:\.\d+)?)      # número real com sinal opcional
-        '''
+        # Padrão compacto e robusto. 'raiz' foi removido.
+        token_pattern = r'(\*\*)|(conj)|([+-]?\d+(?:\.\d+)?[+-]\d+(?:\.\d+)?i)|([+-]?\d+(?:\.\d+)?i)|([+-]?i)|([+-]?\d+(?:\.\d+)?)|(\()|(\))|(\+)|(\-)|(\*)|(\/)'
 
-        raw_iter = re.finditer(token_pattern, expr, flags=re.VERBOSE)
+        raw_iter = re.finditer(token_pattern, expr)
         tokens = [m.group(0) for m in raw_iter]
 
         if "".join(tokens) != expr:
@@ -66,7 +57,8 @@ class Parser:
 
         def aplicar():
             op = ops.pop()
-            if op in ("conj", "raiz"):
+            # 'raiz' removido daqui
+            if op in ("conj"):
                 child = output.pop()
                 output.append(UnaryOpNode(op, child))
                 return
@@ -78,11 +70,15 @@ class Parser:
         while i < len(tokens):
             t = tokens[i]
 
-            if re.match(r'^[+-]?\d+(\.\d+)?i$|^[+-]?i$|^[+-]?\d+(\.\d+)?$', t):
+            # 1. TRATAMENTO DE LITERAIS (Números complexos/reais)
+            if re.match(r'^[+-]?\d+(\.\d+)?i$|^[+-]?i$|^[+-]?\d+(\.\d+)?[+-]\d+(\.\d+)?i$|^[+-]?\d+(\.\d+)?$', t):
                 real, imag = self.parse_complex_literal(t)
                 numero = Complexo(real, imag)
                 output.append(NumberNode(numero))
-            elif t in ("conj", "raiz"):
+            
+            # 2. TRATAMENTO DE PALAVRAS-CHAVE E PARÊNTESES
+            # 'raiz' removido daqui
+            elif t in ("conj"):
                 ops.append(t)
             elif t == "(":
                 ops.append("(")
@@ -92,14 +88,28 @@ class Parser:
                 if not ops:
                     raise ValueError("Parênteses desbalanceados")
                 ops.pop()
-                if ops and ops[-1] in ("conj", "raiz"):
+                # 'raiz' removido daqui
+                if ops and ops[-1] in ("conj"): 
                     aplicar()
+            
+            # 3. TRATAMENTO DE OPERADORES BINÁRIOS E UNÁRIOS DE SINAL
             elif t in self.precedence:
-                while (ops and ops[-1] in self.precedence and
-                       ((self.precedence[ops[-1]] > self.precedence[t]) or
-                        (self.precedence[ops[-1]] == self.precedence[t] and t != "**"))):
-                    aplicar()
-                ops.append(t)
+                
+                # Checa se o operador binário é na verdade um operador UNÁRIO DE SINAL
+                is_unary_sign = (t in ('+', '-')) and \
+                                (i == 0 or tokens[i-1] in ('(', '+', '-', '*', '/', '**'))
+                                
+                if is_unary_sign:
+                    # Se for um sinal unário, ele é empilhado. Será aplicado como UnaryOpNode
+                    # na função aplicar() ou tratado como parte do próximo literal se for o caso.
+                    ops.append(t)
+                else:
+                    # É um operador binário normal
+                    while (ops and ops[-1] in self.precedence and
+                           ((self.precedence[ops[-1]] > self.precedence[t]) or
+                            (self.precedence[ops[-1]] == self.precedence[t] and t != "**"))):
+                        aplicar()
+                    ops.append(t)
             else:
                 raise ValueError(f"Token inesperado: {t}")
 
@@ -128,4 +138,5 @@ class Parser:
         m2 = re.match(r"^([+-]?\d+(\.\d+)?)i$", s)
         if m2:
             return 0.0, float(m2.group(1))
+            
         raise ValueError(f"Literal complexo inválido: {s}")

@@ -1,6 +1,31 @@
+import re
 from parser import Parser, NumberNode, UnaryOpNode, BinaryOpNode
-from complexos import Complexo, ErroMatematico
+from complexos import Complexo
+from erros import ErroMatematico
 from arvore import lisp, arvore
+
+# =======================================================
+# Função de Pré-processamento para Raiz n-ésima
+# =======================================================
+
+def pre_process_expr(expr):
+    """Converte a sintaxe raiz(base, ordem) para potenciação (base**(1/ordem))."""
+    # Regex que encontra 'raiz(ARG1, ARG2)'
+    # ([^,]+?) e ([^)]+?) capturam a base e a ordem de forma não-gananciosa.
+    pattern = r"raiz\s*\(([^,]+?)\s*,\s*([^)]+?)\)" 
+    
+    def replacement(match):
+        base = match.group(1).strip()
+        n = match.group(2).strip()
+        # Converte para a sintaxe de potenciação que o parser entende
+        return f"({base}**(1.0/{n}))" 
+    
+    # Loop para substituir todas as ocorrências de raiz(...) (útil para raízes aninhadas)
+    count = 1
+    while count > 0:
+        expr, count = re.subn(pattern, replacement, expr)
+        
+    return expr
 
 def eval_node(node):
     """Avalia a AST recursivamente e retorna Complexo."""
@@ -11,9 +36,6 @@ def eval_node(node):
         val = eval_node(node.child)
         if node.op == "conj":
             return val.conjugado()
-        if node.op == "raiz":
-            # raiz padrão: raiz quadrada
-            return val.raiz_n(2)
         if node.op == "-":
             return Complexo(-val.a, -val.b)
         raise ValueError(f"Operador unário desconhecido: {node.op}")
@@ -50,7 +72,12 @@ if __name__ == "__main__":
             if not expr:
                 continue
             try:
-                ast = p.parse(expr)
+                # 1. Pré-processar a expressão para converter raiz(a, b) para potenciação
+                processed_expr = pre_process_expr(expr)
+                
+                # 2. Fazer o parsing da expressão processada
+                ast = p.parse(processed_expr)
+                
                 print("\nÁrvore (LISP):")
                 print(lisp(ast))
                 print("\nÁrvore (visual):")
