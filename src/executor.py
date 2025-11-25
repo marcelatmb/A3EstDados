@@ -1,30 +1,12 @@
 import re
 from parser import Parser, NumberNode, UnaryOpNode, BinaryOpNode
-from complexos import Complexo
-from erros import ErroMatematico
-from arvore import lisp, arvore
+from complexos import Complexo, ErroMatematico
+# Presumindo que 'arvore' e 'lisp' são importáveis
+from arvore import lisp, arvore 
 
-# =======================================================
-# Função de Pré-processamento para Raiz n-ésima
-# =======================================================
-
+# Nota: Agora o parser já entende 'raiz' e 'conj', então pre_process_expr
+# pode ser apenas identidade (mantive a função caso queira transformação extra)
 def pre_process_expr(expr):
-    """Converte a sintaxe raiz(base, ordem) para potenciação (base**(1/ordem))."""
-    # Regex que encontra 'raiz(ARG1, ARG2)'
-    # ([^,]+?) e ([^)]+?) capturam a base e a ordem de forma não-gananciosa.
-    pattern = r"raiz\s*\(([^,]+?)\s*,\s*([^)]+?)\)" 
-    
-    def replacement(match):
-        base = match.group(1).strip()
-        n = match.group(2).strip()
-        # Converte para a sintaxe de potenciação que o parser entende
-        return f"({base}**(1.0/{n}))" 
-    
-    # Loop para substituir todas as ocorrências de raiz(...) (útil para raízes aninhadas)
-    count = 1
-    while count > 0:
-        expr, count = re.subn(pattern, replacement, expr)
-        
     return expr
 
 def eval_node(node):
@@ -36,8 +18,10 @@ def eval_node(node):
         val = eval_node(node.child)
         if node.op == "conj":
             return val.conjugado()
-        if node.op == "-":
+        if node.op in ("-", "u-"):
             return Complexo(-val.a, -val.b)
+        if node.op in ("+", "u+"):
+            return val
         raise ValueError(f"Operador unário desconhecido: {node.op}")
 
     if isinstance(node, BinaryOpNode):
@@ -53,11 +37,18 @@ def eval_node(node):
         if op == "/":
             return left / right
         if op == "**":
-            # right pode ser inteiro ou Complexo
-            # converter right para Python float/int quando possível
+            # right é Complexo; se for inteiro real, usar int
+            # A classe Complexo.__pow__ trata o tipo, então esta otimização é opcional
             if right.b == 0 and float(right.a).is_integer():
                 return left ** int(right.a)
             return left ** right
+        if op == "raiz":
+            # raiz(base, ordem) => base ** (1 / ordem)
+            # 1/ordem é tratado como Complexo
+            denom = right
+            # calcular 1/denom usando Complexo divisão
+            one = Complexo(1.0, 0.0)
+            return left ** (one / denom)
         raise ValueError(f"Operador binário desconhecido: {op}")
 
     raise TypeError("Nó AST desconhecido")
@@ -72,14 +63,15 @@ if __name__ == "__main__":
             if not expr:
                 continue
             try:
-                # 1. Pré-processar a expressão para converter raiz(a, b) para potenciação
+                # 1. Pré-processar (agora identidade)
                 processed_expr = pre_process_expr(expr)
-                
+
                 # 2. Fazer o parsing da expressão processada
                 ast = p.parse(processed_expr)
-                
+
                 print("\nÁrvore (LISP):")
-                print(lisp(ast))
+                # A função lisp() precisa de tratamento de erro para AST incompleta/errada
+                print(lisp(ast)) 
                 print("\nÁrvore (visual):")
                 arvore(ast)
                 print("\nResultado:")

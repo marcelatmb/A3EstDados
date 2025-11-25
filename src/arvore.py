@@ -1,7 +1,7 @@
 from parser import NumberNode, UnaryOpNode, BinaryOpNode
 
 # ============================================================
-#              Função que imprime em notação LISP
+#               Função que imprime em notação LISP
 # ============================================================
 
 def lisp(no):
@@ -25,14 +25,14 @@ def lisp(no):
 
 
 # ============================================================
-#              Função que imprime a árvore visual
+#               Função que imprime a árvore visual
 # ============================================================
 
 def arvore(no, grau=0):
     if no is None:
         return
 
-    prefixo = "    " * grau
+    prefixo = "    " * grau
 
     # Nó número
     if isinstance(no, NumberNode):

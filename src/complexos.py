@@ -19,11 +19,11 @@ class Complexo:
     def __str__(self):
         a = self.a
         b = self.b
-        if b == 0:
+        if abs(b) < 1e-12:
             return f"{a}"
-        if a == 0:
+        if abs(a) < 1e-12:
             return f"{b}i"
-        if b > 0:
+        if b >= 0:
             return f"{a} + {b}i"
         return f"{a} - {-b}i"
 
@@ -66,7 +66,7 @@ class Complexo:
     # divisão
     def __truediv__(self, other):
         other = Complexo._cast(other)
-        if other.a == 0 and other.b == 0:
+        if abs(other.a) < 1e-15 and abs(other.b) < 1e-15:
             raise ErroMatematico("divisão por zero")
         den = other.a * other.a + other.b * other.b
         # multiplicar pelo conjugado do denominador
@@ -98,6 +98,8 @@ class Complexo:
 
         # caso expoente inteiro real -> fórmula de De Moivre
         if n.b == 0 and float(n.a).is_integer():
+            if self.modulo() == 0 and n.a < 0:
+                raise ErroMatematico("0 elevado a potência negativa")
             k = int(n.a)
             r = self.modulo()
             theta = self.argumento()
@@ -110,8 +112,14 @@ class Complexo:
         r = self.modulo()
         if r == 0:
             if n.a == 0 and n.b == 0:
-                return Complexo(1, 0)
-            return Complexo(0, 0)
+                return Complexo(1, 0) # 0^0 = 1
+            if n.a > 0:
+                return Complexo(0, 0) # 0^positiva = 0
+            if n.a < 0:
+                 raise ErroMatematico("0 elevado a potência negativa")
+            if n.a == 0 and n.b != 0:
+                return Complexo(0, 0) # 0^0+bi = 0 (com b!=0)
+            
         ln_r = math.log(r)
         theta = self.argumento()
         # w * ln(z)
@@ -121,18 +129,11 @@ class Complexo:
         expx = math.exp(x)
         return Complexo(expx * math.cos(y), expx * math.sin(y))
 
-    # raiz (n-ésima raiz principal) - raiz sem argumento assume n=2
-    '''def raiz_n(self, n=2):
-        if n == 0:
-            raise ErroMatematico("raiz de ordem zero")
-        r = self.modulo()
-        theta = self.argumento()
-        raiz_r = r ** (1.0 / n)
-        raiz_theta = theta / n
-        return Complexo(raiz_r * math.cos(raiz_theta), raiz_r * math.sin(raiz_theta))'''
-
     # igualdade
     def __eq__(self, other):
-        if not isinstance(other, Complexo):
-            other = Complexo._cast(other)
-        return abs(self.a - other.a) < 1e-9 and abs(self.b - other.b) < 1e-9
+        try:
+            if not isinstance(other, Complexo):
+                other = Complexo._cast(other)
+            return abs(self.a - other.a) < 1e-9 and abs(self.b - other.b) < 1e-9
+        except TypeError:
+            return NotImplemented
