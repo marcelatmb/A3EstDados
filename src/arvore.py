@@ -1,56 +1,49 @@
-from parser import NumberNode, UnaryOpNode, BinaryOpNode
-
+# arvore.py
 # ============================================================
-#               Função que imprime em notação LISP
+# Impressão da AST em notação LISP e impressão visual
+# Compatível com nós: NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
 # ============================================================
 
+from parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
+
+# ------------------ lisp (notação) ------------------
 def lisp(no):
+    """Retorna string em notação LISP para a subárvore `no`."""
     if no is None:
         return ""
-
-    # Nó número
+    # número
     if isinstance(no, NumberNode):
         return str(no.value)
-
-    # Nó unário: (op child)
+    # variável
+    if isinstance(no, VariableNode):
+        return str(no.name)
+    # unário
     if isinstance(no, UnaryOpNode):
         return f"({no.op} {lisp(no.child)})"
-
-    # Nó binário: (op left right)
+    # binário
     if isinstance(no, BinaryOpNode):
         return f"({no.op} {lisp(no.left)} {lisp(no.right)})"
-
-    # Qualquer coisa inesperada
     return "?"
 
-
-# ============================================================
-#               Função que imprime a árvore visual
-# ============================================================
-
-def arvore(no, grau=0):
+# ------------------ arvore (visual) ------------------
+def arvore(no, prefix=""):
+    """Imprime a árvore em formato visual legível."""
     if no is None:
         return
-
-    prefixo = "    " * grau
-
-    # Nó número
+    # mostrar o próprio nó
     if isinstance(no, NumberNode):
-        print(prefixo + f"---> {no.value}")
+        print(prefix + f"└── Number: {no.value}")
         return
-
-    # Nó unário
+    if isinstance(no, VariableNode):
+        print(prefix + f"└── Variable: {no.name}")
+        return
     if isinstance(no, UnaryOpNode):
-        print(prefixo + f"---> {no.op}")
-        arvore(no.child, grau + 1)
+        print(prefix + f"└── UnaryOp: {no.op}")
+        arvore(no.child, prefix + "    ")
         return
-
-    # Nó binário
     if isinstance(no, BinaryOpNode):
-        print(prefixo + f"---> {no.op}")
-        arvore(no.left, grau + 1)
-        arvore(no.right, grau + 1)
+        print(prefix + f"└── BinaryOp: {no.op}")
+        arvore(no.left, prefix + "    ")
+        arvore(no.right, prefix + "    ")
         return
-
-    # fallback
-    print(prefixo + "---> ?")
+    print(prefix + "└── ?")
