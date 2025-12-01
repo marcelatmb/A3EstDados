@@ -1,8 +1,26 @@
-# arvore.py
 # ============================================================
 # Impressão da AST em notação LISP e impressão visual ============================================================
 
 from parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
+
+# ------------------ no (export) ------------------
+
+class no:
+
+    def __init__(self, valor, esquerda=None, direita=None):
+        self.valor = valor
+        self.esquerda = esquerda
+        self.direita = direita
+
+    def to_lisp(self):
+        # Leaf
+        if self.esquerda is None and self.direita is None:
+            return str(self.valor)
+        if self.esquerda is None or self.direita is None:
+            child = self.esquerda if self.esquerda is not None else self.direita
+            return f"({self.valor} {child.to_lisp()})"
+        # Binary
+        return f"({self.valor} {self.esquerda.to_lisp()} {self.direita.to_lisp()})"
 
 # ------------------ lisp (notação) ------------------
 def lisp(no):

@@ -1,20 +1,25 @@
-import pytest
-from src.erros import ErroSintaxe, ErroMatematico
 from src.parser import Parser
-from src.executor import Executor
+from src.executor import eval_node
+from src.complexos import Complexo, ErroMatematico
 
 
 def test_erro_sintaxe_simples():
-    with pytest.raises(ErroSintaxe):
-        Parser("3+*4").parse()
+    with pytest.raises(SyntaxError):
+        Parser().parse("3+*4")
 
 
 def test_erro_token_invalido():
-    with pytest.raises(ErroSintaxe):
-        Parser("2 # 3").parse()
+    with pytest.raises(SyntaxError):
+        Parser().parse("2 # 3")
 
 
 def test_erro_divisao_zero():
-    arvore = Parser("3 / 0").parse()
+    arvore = Parser().parse("3 / 0")
     with pytest.raises(ErroMatematico):
-        Executor().executar(arvore)
+        eval_node(arvore, {})
+
+
+def test_erro_variavel_indefinida():
+    arvore = Parser().parse("x + 5")
+    with pytest.raises(NameError):
+        eval_node(arvore, {})

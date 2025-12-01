@@ -1,25 +1,37 @@
-from src.arvore import no
+from src.parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
+from src.arvore import lisp
 
 
-def test_no_simples():
-    n = no("3")
-    assert n.valor == "3"
-    assert n.esquerda is None
-    assert n.direita is None
+def test_number_node():
+    n = NumberNode(3)
+    assert n.value == 3
 
 
-def test_no_com_filhos():
-    n = no("+", no("2"), no("3"))
-    assert n.valor == "+"
-    assert n.esquerda.valor == "2"
-    assert n.direita.valor == "3"
+def test_variable_node():
+    n = VariableNode("x")
+    assert n.name == "x"
 
 
-def test_impressao_lisp_soma():
-    n = no("+", no("3"), no("4"))
-    assert n.to_lisp() == "(+ 3 4)"
+def test_lisp_simple_number():
+    n = NumberNode(3)
+    assert lisp(n) == "3"
 
 
-def test_impressao_lisp_expressao_aninhada():
-    n = no("*", no("+", no("3"), no("4")), no("5"))
-    assert n.to_lisp() == "(* (+ 3 4) 5)"
+def test_lisp_simple_variable():
+    n = VariableNode("x")
+    assert lisp(n) == "x"
+
+
+def test_lisp_unary_operation():
+    n = UnaryOpNode("-", NumberNode(5))
+    assert lisp(n) == "(- 5)"
+
+
+def test_lisp_binary_operation():
+    n = BinaryOpNode("+", NumberNode(3), NumberNode(4))
+    assert lisp(n) == "(+ 3 4)"
+
+
+def test_lisp_nested_expression():
+    n = BinaryOpNode("*", BinaryOpNode("+", NumberNode(3), NumberNode(4)), NumberNode(5))
+    assert lisp(n) == "(* (+ 3 4) 5)"

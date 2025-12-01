@@ -4,7 +4,6 @@
 # Oferece operações: + - * / **, conjugado, módulo, argumento, igualdade
 # Lança ErroMatematico quando necessário (ex.: divisão por zero).
 # ============================================================
-
 import math
 
 class ErroMatematico(Exception):
