@@ -1,8 +1,6 @@
 # arvore.py
 # ============================================================
-# Impressão da AST em notação LISP e impressão visual
-# Compatível com nós: NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
-# ============================================================
+# Impressão da AST em notação LISP e impressão visual ============================================================
 
 from parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
 

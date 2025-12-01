@@ -17,34 +17,38 @@ def parse_complex_input(s: str) -> Complexo:
     if s == "":
         raise ValueError("Entrada vazia")
 
-    # lidar com i stand-alone
+    # Normalizar I -> i
     s = s.replace("I", "i")
-    if "i" in s:
-        s_no_i = s[:-1] if s.endswith("i") else s  # remove 'i' final quando presente
-        # se acabou vazio -> 'i' => 1i
-        if s_no_i == "" or s_no_i == "+":
-            return Complexo(0.0, 1.0)
-        if s_no_i == "-":
-            return Complexo(0.0, -1.0)
-        # encontrar separador entre real/imag (scan a partir do segundo caractere)
-        sep = None
-        for i, ch in enumerate(s_no_i[1:], start=1):
-            if ch in "+-":
-                sep = i
-                break
-        if sep is None:
-            # apenas parte imaginária, ex: '4i' ou '-4i'
-            imag = float(s_no_i)
-            return Complexo(0.0, imag)
+    try:
+        if "i" in s:
+            s_no_i = s[:-1] if s.endswith("i") else s  # remove 'i' final quando presente
+            # se acabou vazio -> 'i' => 1i
+            if s_no_i == "" or s_no_i == "+":
+                return Complexo(0.0, 1.0)
+            if s_no_i == "-":
+                return Complexo(0.0, -1.0)
+            # encontrar separador entre real/imag (scan a partir do segundo caractere)
+            sep = None
+            for i, ch in enumerate(s_no_i[1:], start=1):
+                if ch in "+-":
+                    sep = i
+                    break
+            if sep is None:
+                # apenas parte imaginária, ex: '4i' ou '-4i'
+                imag = float(s_no_i)
+                return Complexo(0.0, imag)
+            else:
+                real_part = s_no_i[:sep]
+                imag_part = s_no_i[sep:]
+                real = float(real_part) if real_part not in ("", "+", "-") else (0.0 if real_part == "" else float(real_part))
+                imag = float(imag_part)
+                return Complexo(real, imag)
         else:
-            real_part = s_no_i[:sep]
-            imag_part = s_no_i[sep:]
-            real = float(real_part) if real_part not in ("", "+", "-") else (0.0 if real_part == "" else float(real_part))
-            imag = float(imag_part)
-            return Complexo(real, imag)
-    else:
-        # apenas real
-        return Complexo(float(s), 0.0)
+            # apenas real
+            return Complexo(float(s), 0.0)
+    except ValueError:
+        # qualquer erro de conversão numérica -> mensagem amigável em PT-BR
+        raise ValueError(f"Entrada numérica inválida: '{s}'. Use um formato como 'a+bi', '3.2', '4i'.")
 
 # ------------------ coletar variáveis ------------------
 def coletar_variaveis(node, conjunto):
@@ -146,6 +150,12 @@ if __name__ == "__main__":
             except ErroMatematico as em:
                 print("Erro:", em)
             except Exception as e:
-                print("Erro:", e)
+                # garantir saída em português para erros que vierem com mensagens genéricas
+                msg = str(e)
+                # traduções simples de mensagens comuns (se desejar, posso ampliar)
+                if "division by zero" in msg.lower():
+                    print("Erro: divisão por zero")
+                else:
+                    print("Erro:", msg)
     except KeyboardInterrupt:
         print("\nEncerrando.")

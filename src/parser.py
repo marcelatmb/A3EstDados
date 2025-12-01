@@ -94,6 +94,7 @@ class Parser:
             if type_ == "NUMBER":
                 tokens.append(Token("NUMBER", float(value)))
             elif type_ == "IMAG":
+                # ex: '8i' -> Token(IMAG, 8.0)
                 tokens.append(Token("IMAG", float(value[:-1])))
             elif type_ == "NAME":
                 tokens.append(Token("NAME", value))
@@ -174,6 +175,11 @@ class Parser:
         if tok.type == "NAME":
             name_tok = self.eat("NAME")
             name = name_tok.value.lower()
+
+            # Tratar 'i' como unidade imaginária — nunca como variável.
+            if name == "i":
+                return NumberNode(Complexo(0.0, 1.0))
+
             # funções com parênteses
             if self.current_type() == "LPAREN":
                 self.eat("LPAREN")
