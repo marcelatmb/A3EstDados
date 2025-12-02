@@ -1,5 +1,6 @@
 # ============================================================
-# Impressão da AST em notação LISP e impressão visual ============================================================
+# Impressão da AST em notação LISP e impressão visual
+# ============================================================
 
 from parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
 

@@ -11,7 +11,6 @@ class ErroMatematico(Exception):
 
 class Complexo:
     def __init__(self, a, b=0.0):
-        # aceita Complexo, int, float
         if isinstance(a, Complexo):
             self.a = float(a.a)
             self.b = float(a.b)
@@ -19,7 +18,6 @@ class Complexo:
             self.a = float(a)
             self.b = float(b)
 
-    # representação formal e amigável
     def __repr__(self):
         return f"Complexo({self.a}, {self.b})"
     def __str__(self):

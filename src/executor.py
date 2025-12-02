@@ -47,7 +47,6 @@ def parse_complex_input(s: str) -> Complexo:
             # apenas real
             return Complexo(float(s), 0.0)
     except ValueError:
-        # qualquer erro de conversão numérica -> mensagem amigável em PT-BR
         raise ValueError(f"Entrada numérica inválida: '{s}'. Use um formato como 'a+bi', '3.2', '4i'.")
 
 # ------------------ coletar variáveis ------------------
@@ -62,7 +61,6 @@ def coletar_variaveis(node, conjunto):
     elif isinstance(node, BinaryOpNode):
         coletar_variaveis(node.left, conjunto)
         coletar_variaveis(node.right, conjunto)
-    # NumberNode -> nada
 
 # ------------------ avaliador ------------------
 def eval_node(node, vars_dict):
@@ -95,7 +93,6 @@ def eval_node(node, vars_dict):
         if op == "/":
             return left / right
         if op == "**":
-            # otimização: expoente inteiro real
             if right.b == 0 and float(right.a).is_integer():
                 return left ** int(right.a)
             return left ** right
@@ -130,7 +127,6 @@ if __name__ == "__main__":
                 print("\nÁrvore (visual):")
                 arvore(ast)
 
-                # coletar e pedir valores das variáveis (se houver)
                 vars_set = set()
                 coletar_variaveis(ast, vars_set)
                 vars_dict = {}
@@ -150,9 +146,7 @@ if __name__ == "__main__":
             except ErroMatematico as em:
                 print("Erro:", em)
             except Exception as e:
-                # garantir saída em português para erros que vierem com mensagens genéricas
                 msg = str(e)
-                # traduções simples de mensagens comuns (se desejar, posso ampliar)
                 if "division by zero" in msg.lower():
                     print("Erro: divisão por zero")
                 else:

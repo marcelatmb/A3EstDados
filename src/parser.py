@@ -12,7 +12,7 @@ from complexos import Complexo
 # ------------------ tokens ------------------
 TOKEN_SPEC = [
     ("POW",    r"\*\*"),
-    ("IMAG",   r"\d+(\.\d+)?i"),     # 5i antes de 5
+    ("IMAG",   r"\d+(\.\d+)?i"),
     ("NUMBER", r"\d+(\.\d+)?"),
     ("PLUS",   r"\+"),
     ("MINUS",  r"-"),
@@ -37,7 +37,7 @@ class Token:
     def __repr__(self):
         return f"Token({self.type}, {self.value})"
 
-# ------------------ AST nodes (compatíveis com executor/arvore) ------------------
+# ------------------ AST nodes ------------------
 class NumberNode:
     def __init__(self, value: Complexo):
         self.value = value
@@ -70,7 +70,6 @@ class Parser:
     def __init__(self):
         pass
 
-    # interface pública: parse(text) -> AST root
     def parse(self, text: str):
         self.tokens = self.tokenize(text)
         self.pos = 0
@@ -94,7 +93,6 @@ class Parser:
             if type_ == "NUMBER":
                 tokens.append(Token("NUMBER", float(value)))
             elif type_ == "IMAG":
-                # ex: '8i' -> Token(IMAG, 8.0)
                 tokens.append(Token("IMAG", float(value[:-1])))
             elif type_ == "NAME":
                 tokens.append(Token("NAME", value))
@@ -103,8 +101,6 @@ class Parser:
         tokens.append(Token("EOF", None))
         return tokens
 
-    # ----------------- gramática com precedências -----------------
-    # expression -> sum_expr ( EQ sum_expr )?
     def expression(self):
         left = self.sum_expr()
         if self.current_type() == "EQ":
@@ -113,7 +109,6 @@ class Parser:
             return BinaryOpNode(op_tok.value, left, right)
         return left
 
-    # sum_expr -> term ((PLUS|MINUS) term)*
     def sum_expr(self):
         node = self.term()
         while self.current_type() in ("PLUS", "MINUS"):
@@ -122,7 +117,6 @@ class Parser:
             node = BinaryOpNode(op_tok.value, node, right)
         return node
 
-    # term -> power ((TIMES|DIV) power | implicit_mul power)*
     def term(self):
         node = self.power()
         starts_factor = ("NUMBER", "IMAG", "LPAREN", "NAME")
@@ -132,7 +126,6 @@ class Parser:
                 right = self.power()
                 node = BinaryOpNode(op_tok.value, node, right)
                 continue
-            # multiplicação implícita (ex.: 2(3+1), 3i(1+2), x y)
             if self.current_type() in starts_factor:
                 right = self.power()
                 node = BinaryOpNode("*", node, right)
@@ -140,7 +133,6 @@ class Parser:
             break
         return node
 
-    # power -> factor (POW power)?  (right-assoc)
     def power(self):
         node = self.factor()
         if self.current_type() == "POW":
@@ -149,8 +141,7 @@ class Parser:
             node = BinaryOpNode(op_tok.value, node, right)
         return node
 
-    # factor -> (PLUS|MINUS) factor | NUMBER | IMAG | LPAREN expression RPAREN |
-    #           NAME (funções conj(...) e raiz(...)) | NAME (variável)
+
     def factor(self):
         tok = self.current()
         if tok.type == "PLUS":
@@ -176,11 +167,11 @@ class Parser:
             name_tok = self.eat("NAME")
             name = name_tok.value.lower()
 
-            # Tratar 'i' como unidade imaginária — nunca como variável.
+
             if name == "i":
                 return NumberNode(Complexo(0.0, 1.0))
 
-            # funções com parênteses
+
             if self.current_type() == "LPAREN":
                 self.eat("LPAREN")
                 if name == "conj":
@@ -195,15 +186,12 @@ class Parser:
                     return BinaryOpNode("raiz", left, right)
                 else:
                     raise SyntaxError(f"Função desconhecida: {name}")
-            # conj sem parênteses: conj x
             if name == "conj":
                 child = self.factor()
                 return UnaryOpNode("conj", child)
-            # senão é variável
             return VariableNode(name_tok.value)
         raise SyntaxError(f"Token inesperado em factor(): {tok}")
 
-    # ----------------- auxiliares -----------------
     def current(self):
         if self.pos >= len(self.tokens):
             return Token("EOF", None)
