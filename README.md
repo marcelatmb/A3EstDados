@@ -54,7 +54,7 @@ unários e binários, comparações e geração de árvores sintáticas.
 5.  Execute o arquivo principal:
 
     ```bash
-    python executor.py
+    python src/executor.py
     ```
 
 6.  O programa iniciará com o prompt ` Expressão >  `.
