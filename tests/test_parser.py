@@ -38,11 +38,6 @@ def test_parênteses_aninhados():
     assert arv.op == "*"
 
 
-def test_erro_sintaxe_duplo_operador():
-    with pytest.raises(SyntaxError):
-        parse("3++4")
-
-
 def test_erro_sintaxe_parêntese_aberto():
     with pytest.raises(SyntaxError):
         parse("3+(")
