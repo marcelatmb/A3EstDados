@@ -200,3 +200,54 @@ O projeto permitiu explorar na prática:
   * A organização modular em classes (`Complexo`, `Token`, `Parser`, `...Node`).
 
 A calculadora demonstra ser capaz de interpretar e avaliar expressões matemáticas complexas de forma consistente, modular e robusta contra erros de sintaxe ou matemáticos.
+
+Aqui está o trecho **pronto para colar no README**, seguindo exatamente o mesmo estilo e formatação do restante do documento.
+
+---
+
+## 🔧 11. Como Rodar os Testes no VSCode (Pytest)
+
+Os testes automatizados do projeto utilizam o **pytest**, e podem ser executados diretamente pelo VSCode ou pelo terminal.
+
+### **11.1 Pré-requisitos**
+
+* Python instalado
+* Extensão **Python** do VSCode
+* Extensão **Pytest** habilitada automaticamente (vem junto com a extensão Python)
+
+### **11.2 Ativando o Pytest no VSCode**
+
+1. Abra o VSCode na pasta do projeto.
+2. Pressione **Ctrl+Shift+P** → digite `Python: Configure Tests`.
+3. Escolha **pytest**.
+4. Selecione a pasta `tests/`.
+
+O VSCode detectará automaticamente os arquivos de teste.
+
+### **11.3 Rodando os testes**
+
+Você tem duas opções:
+
+#### **✔ Pelo interface do VSCode**
+
+* Vá em **Testing** (ícone de tubo de ensaio na barra lateral).
+* Clique em **Run Tests**.
+* Ou rode individualmente cada teste pelo símbolo ▶ ao lado do nome.
+
+#### **✔ Pelo terminal integrado**
+
+Dentro da pasta raiz do projeto, execute:
+
+```bash
+pytest -s
+```
+
+> *O parâmetro `-s` exibe a saída (prints) no terminal.*
+
+Ou simplesmente:
+
+```bash
+pytest
+```
+
+Se não quiser ver prints.

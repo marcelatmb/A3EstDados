@@ -1,5 +1,13 @@
-from src.parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
-from src.arvore import lisp
+import sys, os
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+SRC = os.path.join(ROOT, "src")
+
+sys.path.insert(0, ROOT)
+sys.path.insert(0, SRC)
+
+from parser import NumberNode, VariableNode, UnaryOpNode, BinaryOpNode
+from arvore import lisp
 
 
 def test_number_node():

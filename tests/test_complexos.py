@@ -1,5 +1,12 @@
+import sys, os
 import pytest
-from src.complexos import Complexo, ErroMatematico
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+SRC = os.path.join(ROOT, "src")
+sys.path.insert(0, ROOT)
+sys.path.insert(0, SRC)
+
+from complexos import Complexo, ErroMatematico
 
 
 def test_criacao_basica():

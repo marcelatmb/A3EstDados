@@ -1,6 +1,14 @@
-from src.parser import Parser
-from src.executor import eval_node
-from src.complexos import Complexo, ErroMatematico
+import sys, os
+import pytest
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+SRC = os.path.join(ROOT, "src")
+sys.path.insert(0, ROOT)
+sys.path.insert(0, SRC)
+
+from parser import Parser
+from executor import eval_node
+from complexos import Complexo, ErroMatematico
 
 
 def test_erro_sintaxe_simples():
